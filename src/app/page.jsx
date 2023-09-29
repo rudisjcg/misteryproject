@@ -8,39 +8,77 @@ import { useState } from "react";
 export default function Home() {
   const { data: session } = useSession();
 
-  const [comment, setComment] = useState("");
-  const [image, setImage] = useState([]);
+  const [commentText, setCommentText] = useState("");
+  const [images, setImages] = useState([]);
   const [fileName, setFileName] = useState("");
   const likes = [];
   const subComments = [];
+  const [title, setTitle] = useState("");
+  const [commentDat, setComment] = useState("");
 
-  async function submitComment(ev) {
-    ev.preventDefault();
-    const data = { comment, image, session, likes, subComments };
+  async function handleSubmitComment(event) {
+    event.preventDefault();
+    const commentData = {
+      comment: commentText,
+      images,
+      session,
+      likes,
+      subComments,
+      title,
+      commentDat,
+    };
     if (session) {
-      console.log(data);
-      await axios.post("/api/comment", data);
+      try {
+        await axios.post("/api/comment", commentData);
+      } catch (error) {
+        console.error(error);
+      }
     }
-    setComment("");
-    setImage([]);
+    setCommentText("");
+    setImages([]);
   }
 
   return (
     <LayoutPage>
       <div>
-        <form className="flex flex-col" onSubmit={submitComment}>
-          <label htmlFor="">Comment your ideas!</label>
+        <form className="flex flex-col" onSubmit={handleSubmitComment}>
+          <label htmlFor="title">Title</label>
+          <input
+            type="text"
+            className=""
+            id="title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+          />
+
+          <label htmlFor="comment">Comment</label>
           <textarea
             maxLength="200"
             type="text"
             className=""
-            value={comment}
-            onChange={(ev) => setComment(ev.target.value)}
+            id="comment"
+            value={commentDat}
+            onChange={(event) => setComment(event.target.value)}
+          />
+          <label htmlFor="comment">Comment your ideas!</label>
+          <textarea
+            maxLength="200"
+            type="text"
+            className=""
+            id="comment"
+            value={commentText}
+            onChange={(event) => setCommentText(event.target.value)}
           />
           <div>
-            {image.length > 0 &&
-              image.map((img) => (
-                <Image key={img.id} src={img} width={100} height={100} alt="" />
+            {images.length > 0 &&
+              images.map((image) => (
+                <Image
+                  key={image.id}
+                  src={image}
+                  width={100}
+                  height={100}
+                  alt=""
+                />
               ))}
           </div>
           <div>
@@ -49,7 +87,7 @@ export default function Home() {
               onChange={({ target: { files } }) => {
                 files[0] && setFileName(files[0].name);
                 if (files) {
-                  setImage((oldImages) => {
+                  setImages((oldImages) => {
                     return [...oldImages, URL.createObjectURL(files[0])];
                   });
                 }
