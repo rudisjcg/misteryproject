@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useSession } from "next-auth/react";
 
 export default function RegisterForm() {
   const [name, setName] = useState("");
@@ -17,6 +18,10 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
+
+  const {data: session} = useSession();
+  console.log(session)
+  if (session) return router.push('/');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
