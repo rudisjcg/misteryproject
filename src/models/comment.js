@@ -18,14 +18,14 @@ const commentSchema = new Schema(
       type: Array,
       required: false,
     },
-    session: {
-      type: Object,
-      required: true,
+    email: {
+      type: String,
+      required: false,
     },
   },
   { timestamps: true }
 );
 
 const Comment =
-  models.commentSchema || mongoose.model("commentSchema", commentSchema);
+  models?.commentSchema || mongoose.model("commentSchema", commentSchema);
 export default Comment;
