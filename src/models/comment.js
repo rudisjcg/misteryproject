@@ -4,11 +4,9 @@ const commentSchema = new Schema(
   {
     comment: {
       type: String,
-      required: true,
     },
     image: {
-      type: Array,
-      required: false,
+      type: { type: [String] },
     },
     likes: {
       type: Array,
@@ -16,11 +14,9 @@ const commentSchema = new Schema(
     },
     subComment: {
       type: Array,
-      required: false,
     },
     email: {
       type: String,
-      required: false,
     },
   },
   { timestamps: true }

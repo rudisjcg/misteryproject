@@ -11,7 +11,7 @@ async function getComments () {
       return  JSON.parse(JSON.stringify(comments));
 }
 export default async function Home() {
-    const comments = await getComments();   
+    const comments = await getComments();
 
     
   return (
@@ -20,13 +20,15 @@ export default async function Home() {
       <div>
         Comments!
         <div>
-            comments?.map((comment) => (
+            {comments?.map((comment) => (
                 <div key={comment._id}>
                     <h3>
                         {comment.comment}
                     </h3>
+                    <picture>
+                    </picture>
                 </div>
-            ))
+            ))}
         </div>
     </div>  
     </LayoutPage>

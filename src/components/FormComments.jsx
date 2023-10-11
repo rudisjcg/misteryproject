@@ -1,80 +1,48 @@
-"use client";
-import axios from "axios";
-import { useSession } from "next-auth/react";
-import { useState } from "react";
+import multiparty from "multiparty";
+import {PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
+const bucketName = 'rudis-nextecom';
+import fs from 'fs';
+import mime from 'mime-types'
+import { mongooseConnect } from "@/lib/mongoose";
 
-export default  function () {
-    const [images, setImages] = useState([]);
-    const [fileName, setFileName] = useState("");
-    const likes = [];
-    const subComments = [];
-    const [comment, setComment] = useState("");
-    const {data: session} = useSession();
-
+export default async function handle(req, res) {
+  await mongooseConnect();
+  const form = new multiparty.Form();
+  const {fields, files} = await new Promise((resolve, reject) => {
+    form.parse(req, (err, fields, files) => {
+      if (err) reject (err);
+      resolve({fields,files});
+      
+    });
+  });
+  const client = new S3Client({
+    region: 'us-east-1',
+    credentials: {
+        accessKeyId: process.env.S3_ACCESS_KEY,
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+    },
+  });
+  const links = [];
+  for (const file of files.file) {
+    const ext = file.originalFilename.split('.').pop();
+    const newFilename = Date.now() + '.' + ext;
+    console.log({ext,file})
+    await client.send(new PutObjectCommand({
+        Bucket: bucketName,
+        Key: newFilename,
+        Body: fs.readFileSync(file.path),
+        ACL: 'public-read',
+        ContentType: mime.lookup(file.path),
+      }));
+      const link = `https://${bucketName}.s3.amazonaws.com/${newFilename}`;
+      links.push(link);
+      
+  }
   
-    async function handleSubmitComment(event) {
-      event.preventDefault();
-      const commentData = {
-        images: images,
-        email: session.user.email,
-        likes: likes,
-        subComments: subComments,
-        comment: comment,
-      };
-      if (session) {
-        try {
-          await axios.post("/api/comment", commentData);
-        } catch (error) {
-          console.error(error);
-        }
-      }
-      setImages([]);
-      setComment("");
-      setFileName("");
-    }
-
-    
-    return (
-        <form className="flex flex-col" onSubmit={handleSubmitComment}>
-          <label htmlFor="comment">Comment</label>
-          <textarea
-            maxLength="200"
-            type="text"
-            className=""
-            id="comment"
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-          />
-          <div>
-            {images?.length > 0 &&
-              images?.map((image) => (
-                <picture  key={image.id}>
-
-                  <img
-                   
-                    src={image}
-                    width={100}
-                    height={100}
-                    alt=""
-                  />
-                </picture>
-              ))}
-          </div>
-          <div>
-            <input
-              type="file"
-              onChange={({ target: { files } }) => {
-                files[0] && setFileName(files[0].name);
-                if (files) {
-                  setImages((oldImages) => {
-                    return [...oldImages, URL.createObjectURL(files[0])];
-                  });
-                }
-              }}
-            />
-
-          </div>
-            <button type="submit">Submit</button>
-        </form>
-    )
+  
+      return res.json({links});
 }
+
+export const config = {
+  api: { bodyParser: false },
+};
