@@ -4,10 +4,14 @@ import mime from "mime-types";
 import { mongooseConnect } from "@/lib/mongoose";
 import multiparty from "multiparty";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+console.log({ bucketName })
 
 export async function POST(req, res) {
   await mongooseConnect();
+  console.log(req)
   const form = new multiparty.Form();
+
+
   const { fields, files } = await new Promise((resolve, reject) => {
     form.parse(req, (err, fields, files) => {
       if (err) reject(err);
@@ -38,6 +42,7 @@ export async function POST(req, res) {
     const link = `https://${bucketName}.s3.amazonaws.com/${newFilename}`;
     links.push(link);
   }
+  console.log({ links });
 
   return res.json({ links });
 }
